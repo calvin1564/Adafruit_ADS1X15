@@ -18,14 +18,8 @@
     v1.0 - First release
 */
 /**************************************************************************/
-#if ARDUINO >= 100
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-
+#include "Arduino.h"
 #include <Wire.h>
-
 #include "Adafruit_ADS1015.h"
 
 /**************************************************************************/
@@ -34,10 +28,7 @@
 */
 /**************************************************************************/
 static uint8_t i2cread(void) {
-  #if ARDUINO >= 100
   return Wire.read();
-  #else
-  return Wire.receive();
   #endif
 }
 
@@ -47,11 +38,7 @@ static uint8_t i2cread(void) {
 */
 /**************************************************************************/
 static void i2cwrite(uint8_t x) {
-  #if ARDUINO >= 100
   Wire.write((uint8_t)x);
-  #else
-  Wire.send(x);
-  #endif
 }
 
 /**************************************************************************/
@@ -90,19 +77,6 @@ Adafruit_ADS1015::Adafruit_ADS1015(uint8_t i2cAddress)
    m_i2cAddress = i2cAddress;
    m_conversionDelay = ADS1015_CONVERSIONDELAY;
    m_bitShift = 4;
-   m_gain = GAIN_TWOTHIRDS; /* +/- 6.144V range (limited to VDD +0.3V max!) */
-}
-
-/**************************************************************************/
-/*!
-    @brief  Instantiates a new ADS1115 class w/appropriate properties
-*/
-/**************************************************************************/
-Adafruit_ADS1115::Adafruit_ADS1115(uint8_t i2cAddress)
-{
-   m_i2cAddress = i2cAddress;
-   m_conversionDelay = ADS1115_CONVERSIONDELAY;
-   m_bitShift = 0;
    m_gain = GAIN_TWOTHIRDS; /* +/- 6.144V range (limited to VDD +0.3V max!) */
 }
 
@@ -152,7 +126,7 @@ uint16_t Adafruit_ADS1015::readADC_SingleEnded(uint8_t channel) {
                     ADS1015_REG_CONFIG_CPOL_ACTVLOW | // Alert/Rdy active low   (default val)
                     ADS1015_REG_CONFIG_CMODE_TRAD   | // Traditional comparator (default val)
                     ADS1015_REG_CONFIG_DR_1600SPS   | // 1600 samples per second (default)
-                    ADS1015_REG_CONFIG_MODE_SINGLE;   // Single-shot mode (default)
+                    ADS1015_REG_CONFIG_MODE_CONTIN;   // Continuous conversion mode
 
   // Set PGA/voltage range
   config |= m_gain;
@@ -218,7 +192,7 @@ int16_t Adafruit_ADS1015::readADC_Differential_0_1() {
   writeRegister(m_i2cAddress, ADS1015_REG_POINTER_CONFIG, config);
 
   // Wait for the conversion to complete
-  delay(m_conversionDelay);
+  delayMicroseconds(m_conversionDelay);
 
   // Read the conversion results
   uint16_t res = readRegister(m_i2cAddress, ADS1015_REG_POINTER_CONVERT) >> m_bitShift;
@@ -348,7 +322,7 @@ void Adafruit_ADS1015::startComparator_SingleEnded(uint8_t channel, int16_t thre
 int16_t Adafruit_ADS1015::getLastConversionResults()
 {
   // Wait for the conversion to complete
-  delay(m_conversionDelay);
+  delayMicroseconds(m_conversionDelay);
 
   // Read the conversion results
   uint16_t res = readRegister(m_i2cAddress, ADS1015_REG_POINTER_CONVERT) >> m_bitShift;
